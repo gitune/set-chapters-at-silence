@@ -9,6 +9,17 @@ if (@ARGV < 2) {
     exit 1;
 }
 
+sub print_chapter {
+    local *FH = @_[0];
+    my $start = @_[1];
+    my $end = @_[2];
+
+    print FH "[CHAPTER]\n";
+    print FH "TIMEBASE=1/1000\n";
+    printf FH "START=%d\n", ($start * 1000);
+    printf FH "END=%d\n", ($end * 1000);
+}
+
 # get original metadata and open it in append mode
 my ($tmpfh, $tmpfile) = tempfile;
 close $tmpfh;
@@ -28,25 +39,16 @@ while (<SD>) {
         # set chapter
         if ($last_chapter_start_time != $last_time) {
             # set chapter at the end of CM
-            print MD "[CHAPTER]\n";
-            print MD "TIMEBASE=1/1000\n";
-            printf MD "START=%d\n", ($last_chapter_start_time * 1000);
-            printf MD "END=%d\n", ($last_time * 1000);
+            print_chapter(*MD, $last_chapter_start_time, $last_time);
             $last_chapter_start_time = $last_time;
         }
-        print MD "[CHAPTER]\n";
-        print MD "TIMEBASE=1/1000\n";
-        printf MD "START=%d\n", ($last_chapter_start_time * 1000);
-        printf MD "END=%d\n", ($start_time * 1000);
+        print_chapter(*MD, $last_chapter_start_time, $start_time);
         $last_chapter_start_time = $start_time;
     }
     $last_time = $start_time;
 }
 if ($last_chapter_start_time != $start_time) {
-    print MD "[CHAPTER]\n";
-    print MD "TIMEBASE=1/1000\n";
-    printf MD "START=%d\n", ($last_chapter_start_time * 1000);
-    printf MD "END=%d\n", ($start_time * 1000);
+    print_chapter(*MD, $last_chapter_start_time, $start_time);
 }
 close(SD);
 close(MD);
