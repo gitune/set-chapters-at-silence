@@ -32,7 +32,7 @@ my $last_chapter_start_time = 0;
 my $start_time = 0;
 
 # silence detect
-open(SD, "ffmpeg -hide_banner -nostats -y -i $ARGV[0] -af 'silencedetect=d=.5' -c:v copy -c:a pcm_dvd -f null - 2>&1 | grep 'silence_start' |") or die "cannot detect silence: $!";
+open(SD, "ffmpeg -hide_banner -nostats -y -i $ARGV[0] -af 'silencedetect=d=0.5' -c:v copy -c:a pcm_dvd -f null - 2>&1 | grep 'silence_start' |") or die "cannot detect silence: $!";
 while (<SD>) {
     ($start_time) = (/^.*silence_start: ([0-9\.]+).*$/);
     if (($start_time - $last_time) > MIN_INTERVAL) {
@@ -54,7 +54,7 @@ close(SD);
 close(MD);
 
 # set chapters
-`ffmpeg -v quiet -y -i $ARGV[0] -i $tmpfile -movflags faststart -map_metadata 1 -codec copy "$ARGV[1]"`;
+`ffmpeg -v quiet -y -i $ARGV[0] -i $tmpfile -movflags faststart -map_metadata 1 -codec copy -strict -2 "$ARGV[1]"`;
 die "cannot set chapters: $!" if $?;
 
 # delete tmpfile
