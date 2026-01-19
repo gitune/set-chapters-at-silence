@@ -2,6 +2,7 @@
 
 use strict;
 use constant MIN_INTERVAL => 31.0;
+use constant NOISE_THRESH => 5.0;
 use File::Temp 'tempfile';
 
 if (@ARGV < 2) {
@@ -35,7 +36,16 @@ my $start_time = 0;
 open(SD, "ffmpeg -hide_banner -nostats -y -i $ARGV[0] -af 'silencedetect=d=0.5' -c:v copy -c:a pcm_dvd -f null - 2>&1 | grep 'silence_start' |") or die "cannot detect silence: $!";
 while (<SD>) {
     ($start_time) = (/^.*silence_start: ([0-9\.]+).*$/);
-    if (($start_time - $last_time) > MIN_INTERVAL) {
+    my $diff = $start_time - $last_time;
+
+    # Determine if this interval should trigger a new chapter.
+    # It triggers if:
+    # 1. The interval is longer than MIN_INTERVAL (standard program start).
+    # 2. The interval is not a multiple of 15s (not a typical CM) and not too short (noise).
+    my $nearest_15 = int($diff / 15 + 0.5) * 15;
+    my $is_cm_interval = ($diff < MIN_INTERVAL && $nearest_15 > 0 && abs($diff - $nearest_15) < 1.0);
+
+    if ($diff > MIN_INTERVAL || ($diff > NOISE_THRESH && !$is_cm_interval)) {
         # set chapter
         if ($last_chapter_start_time != $last_time) {
             # set chapter at the end of CM
