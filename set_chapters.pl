@@ -43,7 +43,7 @@ while (<SD>) {
     # 1. The interval is longer than MIN_INTERVAL (standard program start).
     # 2. The interval is not a multiple of 15s (not a typical CM) and not too short (noise).
     my $nearest_15 = int($diff / 15 + 0.5) * 15;
-    my $is_cm_interval = ($diff < MIN_INTERVAL && $nearest_15 > 0 && abs($diff - $nearest_15) < 1.0);
+    my $is_cm_interval = ($diff < MIN_INTERVAL && $nearest_15 > 0 && abs($diff - $nearest_15) < 2.0);
 
     if ($diff > MIN_INTERVAL || ($diff > NOISE_THRESH && !$is_cm_interval)) {
         # set chapter
